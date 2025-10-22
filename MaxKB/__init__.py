@@ -22,8 +22,8 @@ class MaxKB:
         # 获取基础配置
         base_info = config["MaxKB"]
 
-        # 临时写一个缓存，记得换成redis
-        self.chatId = None
+        # 使用字典存储聊天ID缓存,key为用户ID
+        self.chat_cache = {}
 
         self.maxKBApi = MaxKBApi(base_info)
 
@@ -35,10 +35,12 @@ class MaxKB:
 
     def send_message(self, qqMessage: C2CMessage) -> str:
         _log.info(qqMessage)
-        if self.chatId is None:
-            self.chatId = self.get_chat()
+        user_id = qqMessage.author.id
+        
+        if user_id not in self.chat_cache:
+            self.chat_cache[user_id] = self.get_chat()
 
-        req = self.maxKBApi.send_message(self.chatId, qqMessage.content)["data"]["content"]
+        req = self.maxKBApi.send_message(self.chat_cache[user_id], qqMessage.content)["data"]["content"]
 
         _log.info(req)
 
